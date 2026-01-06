@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Nyepesi</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; height: 100vh; padding: 20px; }
+        
+        .chat-container { width: 100%; max-width: 500px; background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { background: #0b93f6; color: white; padding: 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        
+        #chatBox { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #ffffff; }
+        .message { padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.4; max-width: 85%; word-wrap: break-word; }
+        .user-msg { background: #0b93f6; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai-msg { background: #e9e9eb; color: #222; align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        .input-area { display: flex; padding: 15px; border-top: 1px solid #eee; background: white; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; padding-left: 20px; }
+        button { background: #0b93f6; color: white; border: none; margin-left: 10px; padding: 0 20px; border-radius: 25px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #0078d4; }
+        
+        /* Loading animation */
+        .typing { font-style: italic; font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">Gemini AI Assistant</div>
+    <div id="chatBox">
+        <div class="message ai-msg">Habari! Mimi ni AI. Niulize chochote...</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Andika hapa..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()">Tuma</button>
+    </div>
+</div>
+
+<script>
+    // WEKA API KEY YAKO HAPA CHINI
+    const API_KEY = "AIzaSyDyMCCv0zvzShnNyZMSy95apiDh8vrFO1c"; 
+    const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const chatBox = document.getElementById("chatBox");
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        // Ongeza ujumbe wa User
+        addMessage(text, 'user-msg');
+        input.value = "";
+
+        // Ongeza sehemu ya jibu la AI (Loading)
+        const aiDiv = addMessage("Inatafuta jibu...", 'ai-msg');
+
+        try {
+            const response = await fetch(URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+            });
+
+            const data = await response.json();
+            const aiText = data.candidates[0].content.parts[0].text;
+            
+            // Badilisha loading na jibu halisi
+            aiDiv.innerText = aiText;
+        } catch (error) {
+            aiDiv.innerText = "Error: Hakikisha API Key ni sahihi na una bando.";
+            console.error(error);
+        }
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addMessage(text, className) {
+        const chatBox = document.getElementById("chatBox");
+        const div = document.createElement("div");
+        div.className = `message ${className}`;
+        div.innerText = text;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return div;
+    }
+</script>
+
+</body>
+</html>
